@@ -54,7 +54,7 @@ pub fn make_file(pixcel_size:u32){
 
     for frame in 2..=frame_number{
 
-        img = image::open(format!("{}{}{}",OUTPUT_DIR,1,FILE_TYPE).as_str()).unwrap().to_rgb8();
+        img = image::open(format!("{}{}{}",OUTPUT_DIR,frame,FILE_TYPE).as_str()).unwrap().to_rgb8();
         file_data = vec![];
 
 
