@@ -10,9 +10,8 @@ struct ImageSetting {
     width:u32,
     height:u32,
     name:u64,
-    image:bmp::Image
+    image:image::ImageBuffer<image::Rgb<u8>, Vec<u8>>
 }
-
 
 struct FileHeader {
     file_name:String,
@@ -32,7 +31,7 @@ mod definition;
 
 mod conversion;
 mod restoration;
-
+// 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
@@ -67,7 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         
 
         deconvert(input_mv,pixcel_size);
-        println!("convert successful");
+        println!("deconvert successful");
 
     }
 
@@ -79,8 +78,14 @@ fn convert(input_fl:String,output_mv:String,framerate:u32,pixcel_size:u32){
     definition::clear();
     conversion::make_image(&input_fl,pixcel_size);
     conversion::make_movie(framerate,&output_mv);
-    definition::clear();
+    // definition::clear();
 }
+
+#[test]
+fn test_con(){
+    convert("test.txt".to_string(), "test.mp4".to_string(), 60, 2);
+}
+
 
 fn deconvert(input_mv:String,pixcel_size:u32){
     definition::clear();
@@ -88,6 +93,13 @@ fn deconvert(input_mv:String,pixcel_size:u32){
     restoration::make_file(pixcel_size);
     definition::clear();
 }
+
+#[test]
+fn test_decon(){
+    deconvert("test.mp4".to_string(),2,);
+}
+
+
 
 fn get_input() -> String {
     let mut word = String::new();

@@ -1,5 +1,5 @@
 use std::io::Write;
-
+use image::{ImageBuffer,Rgb};
 
 
 #[path ="./definition.rs"]
@@ -12,7 +12,7 @@ use crate::{
 
 pub fn make_file(pixcel_size:u32){
 
-    let mut img = bmp::open(format!("{}{}{}",OUTPUT_DIR,1,FILE_TYPE).as_str()).expect("No such file or directory");
+    let mut img:ImageBuffer<Rgb<u8>, Vec<u8>> = image::open(format!("{}{}{}",OUTPUT_DIR,1,FILE_TYPE).as_str()).unwrap().to_rgb8();
     let mut img_set = ImageSetting{
         pointer_coordinate: Coordinate{
             x: 0,
@@ -20,8 +20,8 @@ pub fn make_file(pixcel_size:u32){
         },
         pointer_byte:0, //仮おき
         pixcel_size:pixcel_size,
-        width: img.get_width(),
-        height: img.get_height(),
+        width: img.width(),
+        height: img.height(),
         name:1,
         image:img
     };
@@ -54,7 +54,7 @@ pub fn make_file(pixcel_size:u32){
 
     for frame in 2..=frame_number{
 
-        img = bmp::open(format!("{}{}{}",OUTPUT_DIR,frame,FILE_TYPE).as_str()).expect("No such file or directory");
+        img = image::open(format!("{}{}{}",OUTPUT_DIR,1,FILE_TYPE).as_str()).unwrap().to_rgb8();
         file_data = vec![];
 
 
@@ -79,6 +79,7 @@ pub fn make_file(pixcel_size:u32){
 }
 
 
+
 pub fn cut_out_image(input_mv:&str){
 
     let mut child = std::process::Command::new("/bin/sh")
@@ -94,10 +95,8 @@ pub fn cut_out_image(input_mv:&str){
 
     let _ = child.wait().expect("child process wasn't running");
 }
-#[test]
-fn test_cut() {
-    cut_out_image("rust_book.mp4");   
-}
+
+
 
 fn read_file(img_set:&mut ImageSetting,file_data:&mut Vec<u8>,file_header:&FileHeader){
     loop {
@@ -175,7 +174,6 @@ fn get_header(file_data:&mut Vec<u8>) ->  FileHeader{
 }
 
 
-
 fn read_pixel(img_set:& mut ImageSetting) -> bool{
 
     let mut sum:u32 = 0;
@@ -188,7 +186,7 @@ fn read_pixel(img_set:& mut ImageSetting) -> bool{
         for y in 0..img_set.pixcel_size{
         
             let pixel = img_set.image.get_pixel(img_set.pointer_coordinate.x+x,img_set.pointer_coordinate.y+y);
-            sum += (pixel.r as u32 + pixel.g as u32 + pixel.b as u32) / rgb;
+            sum += (pixel[0] as u32 + pixel[1] as u32 + pixel[2] as u32) / rgb;
 
         }           
     }

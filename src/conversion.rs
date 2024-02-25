@@ -1,4 +1,4 @@
-use bmp;
+use image;
 use std;
 use std::io::Read;
 use std::io::Write;
@@ -47,7 +47,6 @@ pub fn make_movie(framerate: u32,output_mv:&str) {
     }
 
     let _ = child.wait().expect("child process wasn't running");
-    let _ = definition::clear();
 
 }
 
@@ -63,14 +62,13 @@ pub fn make_image(input_fl:&str,pixcel_size:u32){
         width: WIDTH,
         height: HEIGHT,
         name:1,
-        image: bmp::Image::new(WIDTH, HEIGHT)
+        image:image::RgbImage::new(WIDTH, HEIGHT)
     };
 
 
     let file = std::fs::File::open(input_fl).expect("no such file or directory");
     let file_header = FileHeader{
         file_name:input_fl.to_string(),
-        // 2 for null
         file_size:file.metadata().unwrap().len()
     };
     let mut reader = std::io::BufReader::new(file);
@@ -93,7 +91,7 @@ pub fn make_image(input_fl:&str,pixcel_size:u32){
                             
                             let _ = img_set.image.save(&(OUTPUT_DIR.to_owned()+&img_set.name.to_string()+FILE_TYPE));
                             
-                            img_set.image = bmp::Image::new(img_set.width, img_set.height);
+                            img_set.image =image::RgbImage::new(WIDTH, HEIGHT);
                             img_set.name+=1;
                             img_set.pointer_coordinate.x=0;
                             img_set.pointer_coordinate.y=0;
@@ -114,13 +112,11 @@ fn write_pixel(img_set:& mut ImageSetting,bit:bool){
         
         for y in 0..img_set.pixcel_size{
             
-            
-
-            img_set.image.set_pixel(
-                img_set.pointer_coordinate.x+x,
-                img_set.pointer_coordinate.y+y,
-                if bit { bmp::Pixel { r: 0, g: 0, b: 0}} 
-                    else {bmp::Pixel { r: 255, g: 255, b: 255}})
+            img_set.image.put_pixel(
+                img_set.pointer_coordinate.x+x, 
+                img_set.pointer_coordinate.y+y, 
+            if bit {image::Rgb([0,0,0])} else{image::Rgb([255,255,255])}
+            );
         }           
     }
 
