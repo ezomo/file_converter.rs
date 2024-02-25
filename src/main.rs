@@ -31,7 +31,7 @@ mod definition;
 
 mod conversion;
 mod restoration;
-// 
+
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
@@ -78,7 +78,7 @@ fn convert(input_fl:String,output_mv:String,framerate:u32,pixcel_size:u32){
     definition::clear();
     conversion::make_image(&input_fl,pixcel_size);
     conversion::make_movie(framerate,&output_mv);
-    // definition::clear();
+    definition::clear();
 }
 
 #[test]
