@@ -1,3 +1,5 @@
+use std::time;
+
 struct Coordinate{
     x:u32,
     y:u32
@@ -20,8 +22,8 @@ struct FileHeader {
 
 
 
-const  OUTPUT_DIR: &str = "./out/";
-const  FILE_TYPE:&str=".bmp";
+const OUTPUT_DIR: &str = "./out/";
+const FILE_TYPE:&str="png";
 const WIDTH:u32 = 1920;
 const HEIGHT:u32 = 1080;
 const BYTE:u8 = 8;
@@ -75,10 +77,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn convert(input_fl:String,output_mv:String,framerate:u32,pixcel_size:u32){
+    
     definition::clear();
-    conversion::make_image(&input_fl,pixcel_size);
-    conversion::make_movie(framerate,&output_mv);
+
+    let now = time::Instant::now();
+    conversion::make_img_mv(&input_fl,pixcel_size,framerate,&output_mv);
+    println!("{:?}", now.elapsed());
+
     definition::clear();
+
 }
 
 #[test]
@@ -89,8 +96,11 @@ fn test_con(){
 
 fn deconvert(input_mv:String,pixcel_size:u32){
     definition::clear();
+    let now = time::Instant::now();
     restoration::cut_out_image(&input_mv);
     restoration::make_file(pixcel_size);
+    println!("{:?}", now.elapsed());
+
     definition::clear();
 }
 

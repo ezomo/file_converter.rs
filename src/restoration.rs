@@ -12,7 +12,7 @@ use crate::{
 
 pub fn make_file(pixcel_size:u32){
 
-    let mut img:ImageBuffer<Rgb<u8>, Vec<u8>> = image::open(format!("{}{}{}",OUTPUT_DIR,1,FILE_TYPE).as_str()).unwrap().to_rgb8();
+    let mut img:ImageBuffer<Rgb<u8>, Vec<u8>> = image::open(format!("{}{}.{}",OUTPUT_DIR,1,FILE_TYPE).as_str()).unwrap().to_rgb8();
     let mut img_set = ImageSetting{
         pointer_coordinate: Coordinate{
             x: 0,
@@ -36,12 +36,9 @@ pub fn make_file(pixcel_size:u32){
         }});    
     }
     
-
     
     let file_header = get_header(& mut file_data);
     img_set.pointer_byte -= file_header.file_name.len() as u64 + 2 +(u64::BITS/BYTE as u32) as u64;
-
-
 
 
     let mut writer = std::io::BufWriter::new(std::fs::File::create(&file_header.file_name).expect("IDK"));
@@ -54,7 +51,7 @@ pub fn make_file(pixcel_size:u32){
 
     for frame in 2..=frame_number{
 
-        img = image::open(format!("{}{}{}",OUTPUT_DIR,1,FILE_TYPE).as_str()).unwrap().to_rgb8();
+        img = image::open(format!("{}{}.{}",OUTPUT_DIR,frame,FILE_TYPE).as_str()).unwrap().to_rgb8();
         file_data = vec![];
 
 
@@ -84,7 +81,7 @@ pub fn cut_out_image(input_mv:&str){
 
     let mut child = std::process::Command::new("/bin/sh")
         .args(&["-c", &{
-            format!("ffmpeg -i {} -vcodec bmp {}%d{}",input_mv,OUTPUT_DIR,FILE_TYPE)
+            format!("ffmpeg -i {} -vcodec {} {}%d.{}",input_mv,FILE_TYPE,OUTPUT_DIR,FILE_TYPE)
         }])
         .stdin(std::process::Stdio::piped())
         .spawn()

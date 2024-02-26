@@ -2,6 +2,7 @@ use image;
 use std;
 use std::io::Read;
 use std::io::Write;
+use std::process::ChildStdin;
 #[path ="./definition.rs"]
 
 mod definition;
@@ -10,48 +11,22 @@ mod definition;
 use crate::{
     WIDTH,
     HEIGHT,
-    OUTPUT_DIR,
-    FILE_TYPE,
     ImageSetting,
     Coordinate,
     FileHeader,
 };
 
 
-pub fn make_movie(framerate: u32,output_mv:&str) {
+fn make_movie(mut child_stdin:& ChildStdin,img_set:&ImageSetting) {
 
-    let mut child = std::process::Command::new("/bin/sh")
-        .args(&["-c", &{
-            format!(
-                "ffmpeg -f rawvideo -pix_fmt rgb24 -s {}x{} -r {} -i - -pix_fmt yuv420p -vcodec libx264 -crf 20 -preset slower -movflags +faststart -y {}",
-                WIDTH, HEIGHT, framerate,output_mv
-            )
-        }])
-        .stdin(std::process::Stdio::piped())
-        .spawn()
-        .expect("failed to execute child");
+    let raw_pixels = img_set.image.clone().into_raw();
 
-    {
-        let child_stdin = child.stdin.as_mut().expect("failed to get stdin");
-
-        for frame in 1..=definition::frame_number().expect("there is nothing") {
-            let filename = format!("{}{}{}",OUTPUT_DIR,frame,FILE_TYPE);
-            let img = image::open(&std::path::Path::new(&filename)).unwrap();
-            let img_rgb = img.to_rgb8();
-            let raw_pixels = img_rgb.into_raw();
-
-            child_stdin.write_all(&raw_pixels).expect("Failed to write to stdin");
-
-        }
-
-    }
-
-    let _ = child.wait().expect("child process wasn't running");
+    child_stdin.write_all(&raw_pixels).expect("Failed to write to stdin");
 
 }
 
 
-pub fn make_image(input_fl:&str,pixcel_size:u32){
+pub fn make_img_mv(input_fl:&str,pixcel_size:u32,framerate: u32,output_mv:&str){
     let mut img_set = ImageSetting{
         pointer_coordinate: Coordinate{
             x: 0,
@@ -64,8 +39,6 @@ pub fn make_image(input_fl:&str,pixcel_size:u32){
         name:1,
         image:image::RgbImage::new(WIDTH, HEIGHT)
     };
-
-
     let file = std::fs::File::open(input_fl).expect("no such file or directory");
     let file_header = FileHeader{
         file_name:input_fl.to_string(),
@@ -74,6 +47,19 @@ pub fn make_image(input_fl:&str,pixcel_size:u32){
     let mut reader = std::io::BufReader::new(file);
     let mut buf = [0; std::u8::MAX as usize];
 
+    let mut child = std::process::Command::new("/bin/sh")
+        .args(&["-c", &{
+            format!(
+                "ffmpeg -f rawvideo -pix_fmt rgb24 -s {}x{} -r {} -i - -pix_fmt yuv420p -vcodec libx264 -crf 20 -preset slower -movflags +faststart -y {}",
+                WIDTH, HEIGHT, framerate,output_mv
+            )
+        }])
+        .stdin(std::process::Stdio::piped())
+        .spawn()
+        .expect("failed to execute child");
+    
+    let child_stdin = child.stdin.as_mut().expect("failed to get stdin");
+    
 
     write_header(file_header, &mut img_set);
 
@@ -82,6 +68,8 @@ pub fn make_image(input_fl:&str,pixcel_size:u32){
         match reader.read(&mut buf).expect("IDK") {
             0 => break,
             n => {
+
+
                 let buf = &buf[..n];
                 for  byte in buf{
                     for i in definition::u8_to_bool_array(*byte){
@@ -89,8 +77,9 @@ pub fn make_image(input_fl:&str,pixcel_size:u32){
 
                         if img_set.height <= img_set.pointer_coordinate.y{
                             
-                            let _ = img_set.image.save(&(OUTPUT_DIR.to_owned()+&img_set.name.to_string()+FILE_TYPE));
-                            
+                            make_movie(&child_stdin, &img_set);
+
+
                             img_set.image =image::RgbImage::new(WIDTH, HEIGHT);
                             img_set.name+=1;
                             img_set.pointer_coordinate.x=0;
@@ -98,12 +87,15 @@ pub fn make_image(input_fl:&str,pixcel_size:u32){
                         }
                     } 
                 }
+
+                
             }
         }
     }
 
-    let _ = img_set.image.save(&(OUTPUT_DIR.to_owned()+&img_set.name.to_string()+FILE_TYPE));
+    make_movie(&child_stdin, &img_set);
 
+    let _ = child.wait().expect("child process wasn't running");
 }
 
 

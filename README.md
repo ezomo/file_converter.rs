@@ -12,9 +12,6 @@ The file structure is simple.
 *File name* , *file size* (before turning it into a video) , *file*  
 Each item is separated by NULL.  
 
-### process Flow
-Convert the input file to  image files and save them in ./out/ .  
-After that, generate a video using the images stored in ./out/ .　
 
 ### Notice
 pixel_size is the length of one side.  
